@@ -2,17 +2,6 @@ spring:
   application:
     name: url-shortener
 
-  datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/urlshortener}
-    username: ${SPRING_DATASOURCE_USERNAME:postgres}
-    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
-    driver-class-name: org.postgresql.Driver
-    hikari:
-      maximum-pool-size: 10
-      minimum-idle: 2
-      connection-timeout: 30000
-      idle-timeout: 600000
-
   jpa:
     hibernate:
       ddl-auto: update
@@ -21,10 +10,6 @@ spring:
       hibernate:
         format_sql: true
 
-  # Render Key Value (Redis) gives a full URL like:
-  # redis://red-xxxxx:password@host:6379
-  # We read it from REDIS_URL environment variable.
-  # Locally falls back to redis://localhost:6379
   data:
     redis:
       url: ${REDIS_URL:redis://localhost:6379}
