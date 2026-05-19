@@ -1,75 +1,60 @@
-# ============================================================
-# URL Shortener — Application Configuration
-# ============================================================
-
 spring:
   application:
     name: url-shortener
 
-  # --- Database (PostgreSQL) ---
   datasource:
-    url: jdbc:postgresql://localhost:5432/urlshortener
-    username: postgres
-    password: postgres
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/urlshortener}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
-    # HikariCP connection pool settings
     hikari:
-      maximum-pool-size: 20         # Max DB connections in pool
-      minimum-idle: 5               # Always keep 5 warm connections
-      connection-timeout: 30000     # 30s timeout to get a connection
-      idle-timeout: 600000          # Drop idle connections after 10min
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
 
-  # --- JPA / Hibernate ---
   jpa:
     hibernate:
-      # validate: check schema matches entities (production)
-      # update: auto-create/update tables (development)
-      # create-drop: rebuild on restart (testing only)
       ddl-auto: update
-    show-sql: false   # Set to true for debugging SQL queries
+    show-sql: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
 
-  # --- Redis ---
+  # Render Key Value (Redis) gives a full URL like:
+  # redis://red-xxxxx:password@host:6379
+  # We read it from REDIS_URL environment variable.
+  # Locally falls back to redis://localhost:6379
   data:
     redis:
-      host: localhost
-      port: 6379
-      # password: your-redis-password   # Uncomment for secured Redis
-      timeout: 2000ms     # Connection timeout — fail fast, don't hang
+      url: ${REDIS_URL:redis://localhost:6379}
+      timeout: 2000ms
       lettuce:
         pool:
-          max-active: 20
-          max-idle: 10
-          min-idle: 5
+          max-active: 10
+          max-idle: 5
+          min-idle: 2
 
-  # --- Cache ---
   cache:
     type: redis
 
-# --- App-specific Settings ---
 app:
-  base-url: https://short.ly    # Change this to your actual domain
+  base-url: ${APP_BASE_URL:http://localhost:8080}
 
-# --- Server ---
 server:
-  port: 8080
+  port: ${PORT:8080}
 
-# --- Actuator (Health & Metrics) ---
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus
+        include: health,info
   endpoint:
     health:
       show-details: always
 
-# --- Logging ---
 logging:
   level:
     com.urlshortener: INFO
-    org.springframework.cache: DEBUG   # Shows cache hits/misses — useful for tuning
+    org.springframework.cache: INFO
     org.hibernate.SQL: WARN

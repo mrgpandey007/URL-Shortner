@@ -1,0 +1,60 @@
+spring:
+  application:
+    name: url-shortener
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/urlshortener}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  # Render Key Value (Redis) gives a full URL like:
+  # redis://red-xxxxx:password@host:6379
+  # We read it from REDIS_URL environment variable.
+  # Locally falls back to redis://localhost:6379
+  data:
+    redis:
+      url: ${REDIS_URL:redis://localhost:6379}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 5
+          min-idle: 2
+
+  cache:
+    type: redis
+
+app:
+  base-url: ${APP_BASE_URL:http://localhost:8080}
+
+server:
+  port: ${PORT:8080}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.urlshortener: INFO
+    org.springframework.cache: INFO
+    org.hibernate.SQL: WARN

@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>short.ly — URL Shortener</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #F7F6F2;
+      --surface: #FFFFFF;
+      --text-primary: #1A1A1A;
+      --text-secondary: #6B6B6B;
+      --text-muted: #A0A0A0;
+      --border: rgba(0,0,0,0.1);
+      --border-strong: rgba(0,0,0,0.2);
+      --accent: #1A1A1A;
+      --success-bg: #EAF3DE;
+      --success-text: #3B6D11;
+      --danger-bg: #FCEBEB;
+      --danger-text: #A32D2D;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 3rem 1.5rem;
+    }
+
+    .wrap { max-width: 640px; margin: 0 auto; }
+
+    /* Header */
+    .logo {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      margin-bottom: 3rem;
+    }
+    .logo strong { color: var(--text-primary); }
+
+    h1 {
+      font-family: 'Space Mono', monospace;
+      font-size: 30px;
+      font-weight: 700;
+      line-height: 1.25;
+      margin-bottom: .5rem;
+    }
+    .sub {
+      font-size: 15px;
+      color: var(--text-secondary);
+      font-weight: 300;
+      margin-bottom: 2.5rem;
+    }
+
+    /* Shorten form */
+    .input-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 1rem;
+    }
+    .url-input {
+      flex: 1;
+      background: var(--surface);
+      border: 0.5px solid var(--border-strong);
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-size: 14px;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color .15s;
+    }
+    .url-input:focus { border-color: var(--text-primary); }
+    .url-input::placeholder { color: var(--text-muted); }
+
+    .btn {
+      background: var(--text-primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 14px 22px;
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity .15s;
+    }
+    .btn:hover { opacity: .8; }
+    .btn:active { transform: scale(.97); }
+
+    /* Options row */
+    .opts {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 2.5rem;
+      flex-wrap: wrap;
+    }
+    .opt-field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      flex: 1;
+      min-width: 140px;
+    }
+    .opt-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: 'Space Mono', monospace;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .opt-input {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text-primary);
+      outline: none;
+    }
+    .opt-input:focus { border-color: var(--border-strong); }
+
+    /* Error box */
+    .err-box {
+      background: var(--danger-bg);
+      border: 0.5px solid #F0959580;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--danger-text);
+      margin-bottom: 1rem;
+      display: none;
+    }
+
+    /* Result card */
+    .result-box {
+      background: var(--surface);
+      border: 0.5px solid var(--border-strong);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 3rem;
+      display: none;
+    }
+    .result-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: 'Space Mono', monospace;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: .75rem;
+    }
+    .pill {
+      display: inline-block;
+      background: var(--success-bg);
+      color: var(--success-text);
+      font-size: 11px;
+      font-family: 'Space Mono', monospace;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 1rem;
+    }
+    .result-url-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 1rem;
+    }
+    .result-url {
+      font-family: 'Space Mono', monospace;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+      word-break: break-all;
+      flex: 1;
+    }
+    .copy-btn {
+      background: #F1EFE8;
+      border: 0.5px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 12px;
+      font-family: 'Space Mono', monospace;
+      cursor: pointer;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      transition: all .15s;
+    }
+    .copy-btn:hover { border-color: var(--border-strong); color: var(--text-primary); }
+    .copy-btn.copied { color: var(--success-text); border-color: #9FE1CB; background: var(--success-bg); }
+
+    .orig-url {
+      font-size: 12px;
+      color: var(--text-muted);
+      word-break: break-all;
+      padding-top: .75rem;
+      border-top: 0.5px solid var(--border);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 0.5px solid var(--border);
+    }
+    .stat { text-align: center; }
+    .stat-val {
+      font-family: 'Space Mono', monospace;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 3px;
+    }
+    .stat-key {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    /* Divider */
+    .divider { border: none; border-top: 0.5px solid var(--border); margin: 2.5rem 0; }
+
+    /* Stats lookup */
+    .section-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: 'Space Mono', monospace;
+      letter-spacing: .06em;
+      margin-bottom: .75rem;
+    }
+    .lookup-row { display: flex; gap: 10px; }
+    .lookup-input {
+      flex: 1;
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color .15s;
+    }
+    .lookup-input:focus { border-color: var(--border-strong); }
+    .lookup-input::placeholder { color: var(--text-muted); font-family: 'DM Sans', sans-serif; }
+    .btn-outline {
+      background: transparent;
+      border: 0.5px solid var(--border-strong);
+      color: var(--text-primary);
+      border-radius: 8px;
+      padding: 12px 20px;
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .btn-outline:hover { background: #F1EFE8; }
+    .loader {
+      display: none;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: .08em;
+      margin-top: .75rem;
+    }
+    .stats-result {
+      display: none;
+      margin-top: 1rem;
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+    }
+
+    /* Footer */
+    .footer {
+      margin-top: 4rem;
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: 'Space Mono', monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+
+    <div class="logo">// <strong>short.ly</strong> — url shortener system</div>
+
+    <h1>Long URLs,<br>killed instantly.</h1>
+    <p class="sub">Paste any URL. Get a short link. Track every click.</p>
+
+    <!-- Shorten form -->
+    <div class="input-row">
+      <input class="url-input" id="urlInput" type="url"
+             placeholder="https://your-very-long-url-goes-here.com/..."/>
+      <button class="btn" onclick="shortenUrl()">SHORTEN →</button>
+    </div>
+
+    <div class="opts">
+      <div class="opt-field">
+        <span class="opt-label">Custom alias</span>
+        <input class="opt-input" id="aliasInput" type="text"
+               placeholder="my-brand (optional)"/>
+      </div>
+      <div class="opt-field">
+        <span class="opt-label">Expires in (hours)</span>
+        <input class="opt-input" id="expiryInput" type="number"
+               placeholder="24 (optional)" min="1"/>
+      </div>
+    </div>
+
+    <div class="err-box" id="errBox"></div>
+
+    <!-- Result card -->
+    <div class="result-box" id="resultBox">
+      <div class="result-label">your short link</div>
+      <div class="pill" id="statusPill">✓ created</div>
+      <div class="result-url-row">
+        <div class="result-url" id="resultUrl"></div>
+        <button class="copy-btn" id="copyBtn" onclick="copyUrl()">copy</button>
+      </div>
+      <div class="orig-url" id="origUrl"></div>
+      <div class="stats-grid">
+        <div class="stat">
+          <div class="stat-val" id="s-clicks">0</div>
+          <div class="stat-key">clicks</div>
+        </div>
+        <div class="stat">
+          <div class="stat-val" id="s-created">—</div>
+          <div class="stat-key">created</div>
+        </div>
+        <div class="stat">
+          <div class="stat-val" id="s-expires">∞</div>
+          <div class="stat-key">expires</div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider"/>
+
+    <!-- Stats lookup -->
+    <div class="section-label">// look up stats by short code</div>
+    <div class="lookup-row">
+      <input class="lookup-input" id="lookupInput" type="text"
+             placeholder="Enter short code  e.g. aX9kLm"/>
+      <button class="btn-outline" onclick="lookupStats()">STATS</button>
+    </div>
+    <div class="loader" id="loader">// fetching...</div>
+    <div class="stats-result" id="statsResult"></div>
+
+    <div class="footer">
+      <p>API running at localhost:8080 &nbsp;·&nbsp; built with Spring Boot + Redis + PostgreSQL</p>
+    </div>
+
+  </div>
+
+  <script>
+    // Change this if your Spring Boot runs on a different port
+    const BASE = 'http://localhost:8080';
+
+    function showErr(msg) {
+      const b = document.getElementById('errBox');
+      b.textContent = msg;
+      b.style.display = 'block';
+      document.getElementById('resultBox').style.display = 'none';
+      setTimeout(() => b.style.display = 'none', 5000);
+    }
+
+    function fmtDate(d) {
+      if (!d) return '∞';
+      return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+    }
+
+    async function shortenUrl() {
+      const url    = document.getElementById('urlInput').value.trim();
+      const alias  = document.getElementById('aliasInput').value.trim();
+      const expiry = document.getElementById('expiryInput').value.trim();
+
+      if (!url) { showErr('Please paste a URL first.'); return; }
+      if (!url.startsWith('http')) { showErr('URL must start with http:// or https://'); return; }
+
+      const body = { url };
+      if (alias)  body.customAlias = alias;
+      if (expiry) body.expiryHours = parseInt(expiry);
+
+      try {
+        const r = await fetch(`${BASE}/api/shorten`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const data = await r.json();
+
+        if (!r.ok) { showErr(data.message || 'Something went wrong.'); return; }
+
+        document.getElementById('resultBox').style.display = 'block';
+        document.getElementById('resultUrl').textContent   = data.shortUrl;
+        document.getElementById('origUrl').textContent     = '→ ' + data.originalUrl;
+        document.getElementById('s-clicks').textContent    = data.clickCount ?? 0;
+        document.getElementById('s-created').textContent   = fmtDate(data.createdAt);
+        document.getElementById('s-expires').textContent   = fmtDate(data.expiresAt);
+        document.getElementById('statusPill').textContent  = alias ? '✓ custom alias set' : '✓ created';
+        document.getElementById('errBox').style.display    = 'none';
+
+      } catch (e) {
+        showErr('Cannot connect to server. Is Spring Boot running on port 8080?');
+      }
+    }
+
+    async function copyUrl() {
+      const url = document.getElementById('resultUrl').textContent;
+      try {
+        await navigator.clipboard.writeText(url);
+        const btn = document.getElementById('copyBtn');
+        btn.textContent = 'copied!';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 2000);
+      } catch (e) {
+        showErr('Copy failed — try manually.');
+      }
+    }
+
+    async function lookupStats() {
+      const code = document.getElementById('lookupInput').value.trim();
+      if (!code) return;
+
+      document.getElementById('loader').style.display = 'block';
+      document.getElementById('statsResult').style.display = 'none';
+
+      try {
+        const r = await fetch(`${BASE}/api/stats/${code}`);
+        const data = await r.json();
+        document.getElementById('loader').style.display = 'none';
+
+        const box = document.getElementById('statsResult');
+        box.style.display = 'block';
+
+        if (!r.ok) {
+          box.innerHTML = `<span style="color:#A32D2D;font-size:13px">${data.message || 'Not found.'}</span>`;
+          return;
+        }
+
+        box.innerHTML = `
+          <div class="result-label">stats for /${code}</div>
+          <div class="result-url" style="margin-bottom:.75rem;font-size:16px">${data.shortUrl}</div>
+          <div class="orig-url" style="border:none;padding:0;margin-bottom:1rem">${data.originalUrl}</div>
+          <div class="stats-grid" style="border-top:0.5px solid rgba(0,0,0,.1);padding-top:1rem">
+            <div class="stat"><div class="stat-val">${data.clickCount ?? 0}</div><div class="stat-key">clicks</div></div>
+            <div class="stat"><div class="stat-val">${fmtDate(data.createdAt)}</div><div class="stat-key">created</div></div>
+            <div class="stat"><div class="stat-val">${fmtDate(data.expiresAt)}</div><div class="stat-key">expires</div></div>
+          </div>`;
+      } catch (e) {
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('statsResult').style.display = 'block';
+        document.getElementById('statsResult').innerHTML =
+          `<span style="color:#A32D2D;font-size:13px">Cannot connect to server.</span>`;
+      }
+    }
+
+    document.getElementById('urlInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') shortenUrl();
+    });
+    document.getElementById('lookupInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') lookupStats();
+    });
+  </script>
+</body>
+</html>

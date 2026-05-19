@@ -1,0 +1,14 @@
+com\urlshortener\dto\ShortenResponse.class
+com\urlshortener\repository\UrlRepository.class
+com\urlshortener\controller\UrlController.class
+com\urlshortener\dto\ShortenRequest.class
+com\urlshortener\dto\ShortenResponse$ShortenResponseBuilder.class
+com\urlshortener\model\Url.class
+com\urlshortener\util\Base62Encoder.class
+com\urlshortener\UrlShortenerApplication.class
+com\urlshortener\exception\AliasAlreadyExistsException.class
+com\urlshortener\exception\UrlNotFoundException.class
+com\urlshortener\config\RedisConfig.class
+com\urlshortener\exception\GlobalExceptionHandler.class
+com\urlshortener\model\Url$UrlBuilder.class
+com\urlshortener\service\UrlService.class
