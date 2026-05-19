@@ -9,12 +9,6 @@ import org.springframework.context.annotation.Configuration;
 
 import javax.sql.DataSource;
 
-/**
- * Converts Render's DATABASE_URL format to JDBC format Spring understands.
- *
- * Render provides: postgresql://user:pass@host/db
- * Spring needs:    jdbc:postgresql://user:pass@host/db
- */
 @Configuration
 @Slf4j
 public class DataSourceConfig {
@@ -22,33 +16,41 @@ public class DataSourceConfig {
     @Value("${DATABASE_URL:#{null}}")
     private String databaseUrl;
 
-    @Value("${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/urlshortener}")
-    private String fallbackUrl;
-
-    @Value("${SPRING_DATASOURCE_USERNAME:postgres}")
-    private String username;
-
-    @Value("${SPRING_DATASOURCE_PASSWORD:postgres}")
-    private String password;
-
     @Bean
     public DataSource dataSource() {
         HikariConfig config = new HikariConfig();
+        config.setDriverClassName("org.postgresql.Driver");
 
         if (databaseUrl != null && !databaseUrl.isBlank()) {
-            // Render provides postgresql:// — convert to jdbc:postgresql://
+            // Step 1: Add jdbc: prefix
             String jdbcUrl = databaseUrl
                 .replace("postgresql://", "jdbc:postgresql://")
                 .replace("postgres://", "jdbc:postgresql://");
 
-            log.info("Using Render DATABASE_URL (converted to JDBC format)");
+            // Step 2: Add port :5432 if missing
+            // Format: jdbc:postgresql://user:pass@host/db
+            // Need:   jdbc:postgresql://user:pass@host:5432/db
+            if (!jdbcUrl.contains(":5432") && !jdbcUrl.contains(":5433")) {
+                // Find @ symbol, then find next / after it — insert :5432 before that /
+                int atIndex = jdbcUrl.lastIndexOf("@");
+                if (atIndex != -1) {
+                    int slashAfterAt = jdbcUrl.indexOf("/", atIndex);
+                    if (slashAfterAt != -1) {
+                        jdbcUrl = jdbcUrl.substring(0, slashAfterAt)
+                                + ":5432"
+                                + jdbcUrl.substring(slashAfterAt);
+                    }
+                }
+            }
+
+            log.info("JDBC URL constructed successfully");
             config.setJdbcUrl(jdbcUrl);
-            // Username and password are embedded in the URL — no need to set separately
+
         } else {
-            log.info("Using fallback datasource config");
-            config.setJdbcUrl(fallbackUrl);
-            config.setUsername(username);
-            config.setPassword(password);
+            // Local development fallback
+            config.setJdbcUrl("jdbc:postgresql://localhost:5432/urlshortener");
+            config.setUsername("postgres");
+            config.setPassword("postgres");
         }
 
         config.setMaximumPoolSize(10);
