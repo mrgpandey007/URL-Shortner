@@ -12,13 +12,6 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Centralized error handling. Without this, Spring returns ugly 500 stack
- * traces to clients. With this, every error is a clean JSON response.
- *
- * This is a maturity signal interviewers look for — it shows you think
- * about the client experience, not just the happy path.
- */
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
@@ -35,7 +28,6 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.CONFLICT, ex.getMessage());
     }
 
-    // Bean Validation errors — malformed request body
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationErrors(MethodArgumentNotValidException ex) {
         Map<String, String> fieldErrors = new HashMap<>();
