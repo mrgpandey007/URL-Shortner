@@ -24,7 +24,7 @@ spring:
     type: redis
 
 app:
-  base-url: ${APP_BASE_URL:http://localhost:8080}
+  base-url: https://nanolink.onrender.com
 
 server:
   port: ${PORT:8080}
